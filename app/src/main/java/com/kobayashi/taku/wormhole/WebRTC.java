@@ -23,6 +23,7 @@ public class WebRTC {
     private PeerConnectionFactory factory;
     private VideoCapturer videoCapturer;
     private EglBase.Context renderEGLContext;
+    private WebRTCCamera camera;
 
     public WebRTC(Activity activity){
         this.activity = activity;
@@ -36,6 +37,8 @@ public class WebRTC {
         PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
         factory = new PeerConnectionFactory(options);
         factory.setVideoHwAccelerationOptions(renderEGLContext, renderEGLContext);
+
+        camera = new WebRTCCamera(activity);
 
         // setupLocalStream
         setupLocalStream();
@@ -54,7 +57,7 @@ public class WebRTC {
         SurfaceViewRenderer localRenderer = setupRenderer();
 
         MediaStream localStream = factory.createLocalMediaStream("android_local_stream");
-        videoCapturer = createCameraCapturer(new Camera2Enumerator(activity));
+        videoCapturer = camera.createVideoCapture(WebRTCCamera.FRONT_CAMERA_ID, null);
         VideoSource localVideoSource = factory.createVideoSource(videoCapturer);
 
         VideoTrack localVideoTrack = factory.createVideoTrack("android_local_videotrack", localVideoSource);
@@ -83,25 +86,5 @@ public class WebRTC {
         localRenderer.setEnableHardwareScaler(true);
 
         return localRenderer;
-    }
-
-    private VideoCapturer createCameraCapturer(CameraEnumerator enumerator) {
-        return createBackCameraCapturer(enumerator);
-    }
-
-    private VideoCapturer createBackCameraCapturer(CameraEnumerator enumerator) {
-        final String[] deviceNames = enumerator.getDeviceNames();
-
-        for (String deviceName : deviceNames) {
-            if (!enumerator.isFrontFacing(deviceName)) {
-                VideoCapturer videoCapturer = enumerator.createCapturer(deviceName, null);
-
-                if (videoCapturer != null) {
-                    return videoCapturer;
-                }
-            }
-        }
-
-        return null;
     }
 }
