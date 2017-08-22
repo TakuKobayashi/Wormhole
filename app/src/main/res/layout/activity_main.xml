@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context="com.kobayashi.taku.wormhole.MainActivity">
 
-    <org.webrtc.SurfaceViewRenderer
+    <com.kobayashi.taku.wormhole.WebRTCSurfaceView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/local_render_view"
