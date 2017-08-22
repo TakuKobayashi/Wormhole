@@ -22,7 +22,7 @@ public class WebRTC {
     private Activity activity;
     private PeerConnectionFactory factory;
     private VideoCapturer videoCapturer;
-    private EglBase.Context renderEGLContext;
+
     private WebRTCCamera camera;
 
     public WebRTC(Activity activity){
@@ -44,10 +44,20 @@ public class WebRTC {
         setupLocalStream();
     }
 
-    // interface -----------------
+    public void addLocalView(WebRTCSurfaceView view){
 
-    public void startCapture(){
-        _startCapture();
+    }
+
+    public void addRemoteView(WebRTCSurfaceView view){
+
+    }
+
+    public void removeLocalView(WebRTCSurfaceView view){
+
+    }
+
+    public void removeRemoteView(WebRTCSurfaceView view){
+
     }
 
     // implements -------------
@@ -68,7 +78,7 @@ public class WebRTC {
     }
 
 
-    private void _startCapture(){
+    public void startCapture(){
         DisplayMetrics displayMetrics = new DisplayMetrics();
         WindowManager windowManager = (WindowManager) activity.getApplication().getSystemService(Context.WINDOW_SERVICE);
         windowManager.getDefaultDisplay().getRealMetrics(displayMetrics);
@@ -86,5 +96,10 @@ public class WebRTC {
         localRenderer.setEnableHardwareScaler(true);
 
         return localRenderer;
+    }
+
+    public void release() {
+        videoCapturer.dispose();
+        factory.dispose();
     }
 }
