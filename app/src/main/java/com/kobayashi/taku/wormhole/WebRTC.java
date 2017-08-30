@@ -18,6 +18,7 @@ import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -27,7 +28,7 @@ public class WebRTC {
     private VideoCapturer videoCapturer;
 
     private WebRTCCamera camera;
-    private HashSet<String> mResourceIds = new HashSet<String>();
+    private HashMap<String, VideoTrack> mResourceTrack = new HashMap<String, VideoTrack>();
 
     public WebRTC(Activity activity){
         this.activity = activity;
@@ -40,29 +41,29 @@ public class WebRTC {
         camera = new WebRTCCamera(activity);
     }
 
-    public void addLocalView(WebRTCSurfaceView view){
+    public String addLocalView(WebRTCSurfaceView view){
         factory.setVideoHwAccelerationOptions(view.getRenderEGLContext(), view.getRenderEGLContext());
-        setupStream(view);
+        return setupStream(view);
     }
 
-    public void addRemoteView(WebRTCSurfaceView view){
+    public String addRemoteView(WebRTCSurfaceView view){
         factory.setVideoHwAccelerationOptions(view.getRenderEGLContext(), view.getRenderEGLContext());
-        setupStream(view);
+        return setupStream(view);
     }
 
-    public void removeLocalView(WebRTCSurfaceView view){
+    public void removeLocalView(String trackId){
+        releaseTrack(trackId);
     }
 
-    public void removeRemoteView(WebRTCSurfaceView view){
-
+    public void removeRemoteView(String trackId){
+        releaseTrack(trackId);
     }
 
 
     // implements -------------
 
-    private void setupStream(WebRTCSurfaceView view) {
+    private String setupStream(WebRTCSurfaceView view) {
         String uuid = UUID.randomUUID().toString();
-        mResourceIds.add(uuid);
         MediaStream localStream = factory.createLocalMediaStream(uuid);
         videoCapturer = camera.createVideoCapture(WebRTCCamera.FRONT_CAMERA_ID, null);
         VideoSource localVideoSource = factory.createVideoSource(videoCapturer);
@@ -72,6 +73,8 @@ public class WebRTC {
 
         VideoRenderer videoRender = new VideoRenderer(view);
         localVideoTrack.addRenderer(videoRender);
+        mResourceTrack.put(uuid, localVideoTrack);
+        return uuid;
     }
 
 
@@ -85,7 +88,18 @@ public class WebRTC {
         videoCapturer.startCapture(videoWidth, videoHeight, 30);
     }
 
+    private void releaseTrack(String trackId){
+        VideoTrack track  = mResourceTrack.get(trackId);
+        if(track != null){
+            track.dispose();
+        }
+        mResourceTrack.remove(trackId);
+    }
+
     public void release() {
+        for(String trackId : mResourceTrack.keySet()){
+            releaseTrack(trackId);
+        }
         videoCapturer.dispose();
         factory.dispose();
     }
