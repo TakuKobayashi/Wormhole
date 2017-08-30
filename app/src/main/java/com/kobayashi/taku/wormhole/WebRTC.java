@@ -18,57 +18,64 @@ import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
+import java.util.HashSet;
+import java.util.UUID;
+
 public class WebRTC {
     private Activity activity;
     private PeerConnectionFactory factory;
     private VideoCapturer videoCapturer;
-    private EglBase.Context renderEGLContext;
+
     private WebRTCCamera camera;
+    private HashSet<String> mResourceIds = new HashSet<String>();
 
     public WebRTC(Activity activity){
         this.activity = activity;
-
-        // rendereContext
-        EglBase eglBase = EglBase.create();
-        renderEGLContext = eglBase.getEglBaseContext();
 
         // initialize Factory
         PeerConnectionFactory.initializeAndroidGlobals(activity.getApplicationContext(), true);
         PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
         factory = new PeerConnectionFactory(options);
-        factory.setVideoHwAccelerationOptions(renderEGLContext, renderEGLContext);
 
         camera = new WebRTCCamera(activity);
-
-        // setupLocalStream
-        setupLocalStream();
     }
 
-    // interface -----------------
-
-    public void startCapture(){
-        _startCapture();
+    public void addLocalView(WebRTCSurfaceView view){
+        factory.setVideoHwAccelerationOptions(view.getRenderEGLContext(), view.getRenderEGLContext());
+        setupStream(view);
     }
+
+    public void addRemoteView(WebRTCSurfaceView view){
+        factory.setVideoHwAccelerationOptions(view.getRenderEGLContext(), view.getRenderEGLContext());
+        setupStream(view);
+    }
+
+    public void removeLocalView(WebRTCSurfaceView view){
+    }
+
+    public void removeRemoteView(WebRTCSurfaceView view){
+
+    }
+
 
     // implements -------------
 
-    private void setupLocalStream() {
-
-        SurfaceViewRenderer localRenderer = setupRenderer();
-
-        MediaStream localStream = factory.createLocalMediaStream("android_local_stream");
+    private void setupStream(WebRTCSurfaceView view) {
+        String uuid = UUID.randomUUID().toString();
+        mResourceIds.add(uuid);
+        MediaStream localStream = factory.createLocalMediaStream(uuid);
         videoCapturer = camera.createVideoCapture(WebRTCCamera.FRONT_CAMERA_ID, null);
         VideoSource localVideoSource = factory.createVideoSource(videoCapturer);
 
-        VideoTrack localVideoTrack = factory.createVideoTrack("android_local_videotrack", localVideoSource);
+        VideoTrack localVideoTrack = factory.createVideoTrack(uuid, localVideoSource);
         localStream.addTrack(localVideoTrack);
 
-        VideoRenderer videoRender = new VideoRenderer(localRenderer);
+        VideoRenderer videoRender = new VideoRenderer(view);
         localVideoTrack.addRenderer(videoRender);
     }
 
 
-    private void _startCapture(){
+    public void startCapture(){
         DisplayMetrics displayMetrics = new DisplayMetrics();
         WindowManager windowManager = (WindowManager) activity.getApplication().getSystemService(Context.WINDOW_SERVICE);
         windowManager.getDefaultDisplay().getRealMetrics(displayMetrics);
@@ -78,13 +85,8 @@ public class WebRTC {
         videoCapturer.startCapture(videoWidth, videoHeight, 30);
     }
 
-    private SurfaceViewRenderer setupRenderer(){
-        SurfaceViewRenderer localRenderer = (SurfaceViewRenderer) activity.findViewById(R.id.local_render_view);
-        localRenderer.init(renderEGLContext, null);
-        localRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
-        localRenderer.setZOrderMediaOverlay(true);
-        localRenderer.setEnableHardwareScaler(true);
-
-        return localRenderer;
+    public void release() {
+        videoCapturer.dispose();
+        factory.dispose();
     }
 }

@@ -36,4 +36,12 @@ public class MainActivity extends AppCompatActivity {
         webRTC = new WebRTC(this);
         webRTC.startCapture();
     }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        if(webRTC != null){
+            webRTC.release();
+        }
+    }
 }
