@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.WindowManager;
 
 import org.webrtc.Camera2Enumerator;
@@ -35,6 +36,7 @@ public class WebRTC {
     private VideoCapturer videoCapturer;
 
     private WebRTCCamera camera;
+    private PeerConnection mConnection;
     private HashMap<String, VideoTrack> mResourceTrack = new HashMap<String, VideoTrack>();
 
     public WebRTC(Activity activity){
@@ -58,63 +60,62 @@ public class WebRTC {
         List<PeerConnection.IceServer> iceServers = Arrays.asList(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
         // 何かセットする必要が多分ある
         MediaConstraints constraints = new MediaConstraints();
-        factory.createPeerConnection(iceServers, constraints, new PeerConnection.Observer() {
+        mConnection = factory.createPeerConnection(iceServers, constraints, new PeerConnection.Observer() {
             @Override
             public void onSignalingChange(PeerConnection.SignalingState signalingState) {
-
+                Log.d(Config.TAG, "SignalingChange:" + signalingState);
             }
 
             @Override
             public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-
+                Log.d(Config.TAG, "IceConnectionChange:" + iceConnectionState);
             }
 
             @Override
             public void onIceConnectionReceivingChange(boolean b) {
-
+                Log.d(Config.TAG, "receiveingChange:" + b);
             }
 
             @Override
             public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
-
+                Log.d(Config.TAG, "IceGatheringChange:" + iceGatheringState);
             }
 
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
-
+                Log.d(Config.TAG, "IceCandidate:" + iceCandidate);
             }
 
             @Override
             public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {
-
+                Log.d(Config.TAG, "IceCandidatesRemoved:" + iceCandidates.length);
             }
 
             @Override
             public void onAddStream(MediaStream mediaStream) {
-
+                Log.d(Config.TAG, "addStream:" + mediaStream);
             }
 
             @Override
             public void onRemoveStream(MediaStream mediaStream) {
-
+                Log.d(Config.TAG, "removeStream:" + mediaStream);
             }
 
             @Override
             public void onDataChannel(DataChannel dataChannel) {
-
+                Log.d(Config.TAG, "dataChannel:" + dataChannel);
             }
 
             @Override
             public void onRenegotiationNeeded() {
-
+                Log.d(Config.TAG, "RenegotiationNeeded");
             }
 
             @Override
             public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
-
+                Log.d(Config.TAG, "addTrack:" + rtpReceiver + "\nstreams:" + mediaStreams.length);
             }
         });
-        //peerConnection = factory.createPeerConnection(iceServers, WebRTCUtil.peerConnectionConstraints(), this);
     }
 
     public String addLocalView(WebRTCSurfaceView view){
