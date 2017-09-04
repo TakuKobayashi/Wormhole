@@ -16,8 +16,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Util.requestPermissions(this, REQUEST_CODE_CAMERA_PERMISSION);
-        Log.d("wormhole", String.valueOf(Util.checkAllPermissionsAccept(this)));
-        startCapture();
+        if(!Util.existConfirmPermissions(this)){
+            startCapture();
+        }
     }
 
     @Override
@@ -26,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode != REQUEST_CODE_CAMERA_PERMISSION)
             return;
-        if(Util.checkAllPermissionsAccept(this)){
+        if(!Util.existConfirmPermissions(this)){
             startCapture();
         }
     }

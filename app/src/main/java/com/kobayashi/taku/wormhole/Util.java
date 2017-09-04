@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PermissionInfo;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -120,18 +121,16 @@ public class Util {
 		return buf.toString();
 	}
 
-	public static ArrayList<String> getSettingPermissions(Context context){
-		ArrayList<String> list = new ArrayList<String>();
+	public static ArrayList<PermissionInfo> getSettingPermissions(Context context){
+		ArrayList<PermissionInfo> list = new ArrayList<PermissionInfo>();
 		PackageInfo packageInfo = null;
 		try {
 			packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_PERMISSIONS);
+			for(String permission : packageInfo.requestedPermissions){
+				list.add(context.getPackageManager().getPermissionInfo(permission, PackageManager.GET_META_DATA));
+			}
 		} catch (PackageManager.NameNotFoundException e) {
 			e.printStackTrace();
-		}
-		if(packageInfo == null || packageInfo.requestedPermissions == null) return list;
-
-		for(String permission : packageInfo.requestedPermissions){
-			list.add(permission);
 		}
 		return list;
 	}
@@ -143,31 +142,30 @@ public class Util {
 
 	public static void requestPermissions(Activity activity, int requestCode){
 		if(Build.VERSION.SDK_INT >= 23) {
-			ArrayList<String> permissions = Util.getSettingPermissions(activity);
-			boolean isRequestPermission = false;
-			for(String permission : permissions){
-				if(!Util.hasSelfPermission(activity, permission)){
-					isRequestPermission = true;
-					break;
+			ArrayList<String> requestPermissionNames = new ArrayList<String>();
+			ArrayList<PermissionInfo> permissions = Util.getSettingPermissions(activity);
+			for(PermissionInfo permission : permissions){
+				if(permission.protectionLevel == PermissionInfo.PROTECTION_DANGEROUS && !Util.hasSelfPermission(activity, permission.name)){
+					requestPermissionNames.add(permission.name);
 				}
 			}
-			if(isRequestPermission) {
-				activity.requestPermissions(permissions.toArray(new String[0]), requestCode);
+			if(!requestPermissionNames.isEmpty()) {
+				activity.requestPermissions(requestPermissionNames.toArray(new String[0]), requestCode);
 			}
 		}
 	}
 
-	public static boolean checkAllPermissionsAccept(Activity activity){
+	public static boolean existConfirmPermissions(Activity activity){
 		if(Build.VERSION.SDK_INT >= 23) {
-			ArrayList<String> permissions = Util.getSettingPermissions(activity);
-			boolean isAcceptPermission = true;
-			for(String permission : permissions){
-				if(!Util.hasSelfPermission(activity, permission)){
-					isAcceptPermission = false;
+			ArrayList<PermissionInfo> permissions = Util.getSettingPermissions(activity);
+			boolean isRequestPermission = false;
+			for(PermissionInfo permission : permissions){
+				if(permission.protectionLevel == PermissionInfo.PROTECTION_DANGEROUS && !Util.hasSelfPermission(activity, permission.name)){
+					isRequestPermission = true;
 					break;
 				}
 			}
-			return isAcceptPermission;
+			return isRequestPermission;
 		}
 		return true;
 	}
