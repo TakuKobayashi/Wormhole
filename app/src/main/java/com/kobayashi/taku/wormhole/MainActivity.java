@@ -34,7 +34,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void startCapture(){
         Log.d("wormhole", "startCapture");
+        WebRTCSurfaceView surfaceView = (WebRTCSurfaceView) findViewById(R.id.local_render_view);
         webRTC = new WebRTC(this);
+        webRTC.addLocalView(surfaceView);
         webRTC.startCapture();
     }
 

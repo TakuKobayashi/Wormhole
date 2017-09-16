@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class WebRTC {
+    private EglBase.Context mRenderEGLContext;
     private Activity activity;
     private PeerConnectionFactory factory;
     private VideoCapturer videoCapturer;
@@ -41,11 +42,14 @@ public class WebRTC {
 
     public WebRTC(Activity activity){
         this.activity = activity;
+        EglBase eglBase = EglBase.create();
+        mRenderEGLContext = eglBase.getEglBaseContext();
 
         // initialize Factory
         PeerConnectionFactory.initializeAndroidGlobals(activity.getApplicationContext(), true);
         PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
         factory = new PeerConnectionFactory(options);
+        factory.setVideoHwAccelerationOptions(mRenderEGLContext, mRenderEGLContext);
 
         camera = new WebRTCCamera(activity);
     }
@@ -119,12 +123,12 @@ public class WebRTC {
     }
 
     public String addLocalView(WebRTCSurfaceView view){
-        factory.setVideoHwAccelerationOptions(view.getRenderEGLContext(), view.getRenderEGLContext());
+        view.Setup(mRenderEGLContext);
         return setupStream(view);
     }
 
     public String addRemoteView(WebRTCSurfaceView view){
-        factory.setVideoHwAccelerationOptions(view.getRenderEGLContext(), view.getRenderEGLContext());
+        view.Setup(mRenderEGLContext);
         return setupStream(view);
     }
 
@@ -162,6 +166,7 @@ public class WebRTC {
         int videoWidth = displayMetrics.widthPixels;
         int videoHeight = displayMetrics.heightPixels;
 
+        Log.d(Config.TAG, "videoCapture:" + videoCapturer);
         videoCapturer.startCapture(videoWidth, videoHeight, 30);
     }
 
