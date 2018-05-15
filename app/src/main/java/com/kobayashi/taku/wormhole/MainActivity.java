@@ -7,6 +7,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import net.taptappun.taku.kobayashi.runtimepermissionchecker.RuntimePermissionChecker;
+
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_CAMERA_PERMISSION = 1;
     private WebRTC webRTC;
@@ -15,8 +17,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Util.requestPermissions(this, REQUEST_CODE_CAMERA_PERMISSION);
-        if(!Util.existConfirmPermissions(this)){
+        RuntimePermissionChecker.requestAllPermissions(this, REQUEST_CODE_CAMERA_PERMISSION);
+        if(!RuntimePermissionChecker.existConfirmPermissions(this)){
             startCapture();
         }
     }
@@ -27,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode != REQUEST_CODE_CAMERA_PERMISSION)
             return;
-        if(!Util.existConfirmPermissions(this)){
+        if(!RuntimePermissionChecker.existConfirmPermissions(this)){
             startCapture();
         }
     }
